@@ -655,6 +655,100 @@ end)
 
 
 
+-- Define the method to adjust animation speeds
+local function emoting_actions(speed)
+    local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        if speed then
+            for _, v in pairs(humanoid:GetPlayingAnimationTracks()) do
+                v:AdjustSpeed(speed)
+            end
+        else
+            for _, v in pairs(humanoid:GetPlayingAnimationTracks()) do
+                v:Stop()
+            end
+        end
+    end
+end
+
+-- Create the Slow Motion toggle in Rayfield
+local isSlowMotionActive = false
+
+Tab:CreateToggle({
+    Name = "Slow Motion Emotes (Loop)",
+    CurrentValue = false,
+    Callback = function(slowMotion)
+        if slowMotion then
+            isSlowMotionActive = true
+            -- Continuously adjust animation speed while slow motion is active
+            while isSlowMotionActive do
+                wait(0.1)
+                emoting_actions(0.2)  -- Adjust speed to 0.2 (slow-motion)
+            end
+        else
+            isSlowMotionActive = false
+            -- Stop slow-motion and return to normal
+            emoting_actions(1)  -- Return to normal speed
+        end
+    end,
+})
+
+-- Ensure toggle state is reset if the script runs again
+wait(0.2)
+if isSlowMotionActive then
+    ab:CreateToggle({Name = "Slow Motion Emotes", CurrentValue = false})
+    isSlowMotionActive = false
+end
+
+local isToggling = false
+local originalPosition = nil
+local player = game.Players.LocalPlayer
+local hrp = player.Character and player.Character:WaitForChild("HumanoidRootPart") -- Ensure we access HumanoidRootPart
+
+local distance = 12 -- Set the distance for the teleport
+local delayTime = 0.05 -- Set the delay time for teleportation loop
+
+-- Function to start teleporting
+local function teleportLoop()
+    local direction = -1
+    while isToggling do
+        -- Check if HumanoidRootPart is available
+        if hrp then
+            if not originalPosition then
+                originalPosition = hrp.CFrame -- Store the original position
+            end
+            hrp.CFrame = hrp.CFrame * CFrame.new(distance * direction, 0, 0) -- Move along X-axis
+            direction *= -1 -- Change direction for back and forth movement
+        end
+        task.wait(delayTime) -- Wait before continuing teleport
+    end
+end
+
+-- Function to stop teleporting and reset position
+local function stopTeleporting()
+    if hrp and originalPosition then
+        hrp.CFrame = originalPosition -- Return to the original position
+        originalPosition = nil
+    end
+end
+
+-- Rayfield Toggle
+local Toggle = Tab:CreateToggle({
+    Name = "FlashStep",
+    CurrentValue = false,
+    Flag = "teleport_toggle", 
+    Callback = function(state)
+        isToggling = state
+        if isToggling then
+            teleportLoop() -- Start teleporting loop
+        else
+            stopTeleporting() -- Stop teleporting and return to the original position
+        end
+    end
+})
+
+
+
 local Tab = Window:CreateTab("Character", nil) -- Title, Image
 
 local Section = Tab:CreateSection("Character")
@@ -1707,6 +1801,5 @@ end
 
    end,
 })
-
 
 
