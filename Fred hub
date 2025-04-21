@@ -169,25 +169,42 @@ local Button = Tab:CreateButton({
    Callback = function()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local MyUsername = "awdasdawfa8"  -- Your username
 
--- Set your username here
-local kingUsername = "awdasdawfa8"
+-- Check if the player is you
+local function isMe(player)
+    return player.Name == MyUsername
+end
 
--- Function to teleport to the king
-local function teleportToKing()
-    -- Find the king by username
-    local king = Players:FindFirstChild(kingUsername)
-    
-    if king and king.Character and king.Character:FindFirstChild("HumanoidRootPart") then
-        -- Teleport the player to the king's position
-        LocalPlayer.Character:SetPrimaryPartCFrame(king.Character.HumanoidRootPart.CFrame)
-    else
-        warn("King not found or their character is not loaded.")
+-- Teleport others to you using CFrame
+local function teleportToMe()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if isMe(player) then
+            local myCharacter = player.Character
+            if myCharacter then
+                -- Wait for your character to fully load and get the HumanoidRootPart
+                local humanoidRootPart = myCharacter:WaitForChild("HumanoidRootPart")
+                local playerRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+                
+                -- Use CFrame to teleport the other player's character to you
+                playerRootPart.CFrame = humanoidRootPart.CFrame
+                print("Teleported to me!")
+                break
+            end
+        end
     end
 end
 
--- Call the function to teleport
-teleportToKing()
+-- Teleport others to you if you're already in the game
+teleportToMe()
+
+-- Set up a listener to teleport others when you join the game
+Players.PlayerAdded:Connect(function(player)
+    if isMe(player) then
+        teleportToMe()
+    end
+end)
+
 
    end,
 })
@@ -1690,5 +1707,6 @@ end
 
    end,
 })
+
 
 
