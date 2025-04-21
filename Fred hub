@@ -172,101 +172,102 @@ local Section = Tab:CreateSection("player")
 local Button = Tab:CreateButton({
    Name = "fly",
    Callback = function()
-   local UserInputService = game:GetService("UserInputService")
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local flying = false
+local speed = 100
+local bodyVelocity
+local currentHRP
 
--- ✅ Safe notification
+-- movement input flags
+local moveKeys = {
+	W = false, A = false, S = false, D = false,
+	Space = false, LeftShift = false
+}
+
+-- ✅ Safe notify
 local function safeNotify(title, text, duration)
-	local success, err = pcall(function()
+	pcall(function()
 		StarterGui:SetCore("SendNotification", {
 			Title = title,
 			Text = text,
 			Duration = duration or 5
 		})
 	end)
-
-	if not success then
-		warn("Notification failed: " .. tostring(err))
-	end
 end
 
--- 🔔 Show "Press F to fly"
-safeNotify("Flight", "Press F to fly", 5)
-
-local flying = false
-local speed = 100
-
-local bodyVelocity = Instance.new("BodyVelocity")
-bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-bodyVelocity.Velocity = Vector3.zero
-bodyVelocity.P = 1250
-
--- Keep track of which keys are currently held
-local moveKeys = {
-	W = false,
-	A = false,
-	S = false,
-	D = false,
-	Space = false,
-	LeftShift = false
-}
-
--- Toggle flying with F
+-- 🧠 Input setup (only once)
 UserInputService.InputBegan:Connect(function(input, isProcessed)
 	if isProcessed then return end
 
-	if input.KeyCode == Enum.KeyCode.F then
+	local key = input.KeyCode
+	if key == Enum.KeyCode.F then
 		flying = not flying
-		if flying then
-			bodyVelocity.Parent = humanoidRootPart
-		else
+		if flying and currentHRP and bodyVelocity then
+			bodyVelocity.Parent = currentHRP
+		elseif bodyVelocity then
 			bodyVelocity.Parent = nil
 		end
 	end
 
-	-- Set movement direction flags
-	if input.KeyCode == Enum.KeyCode.W then moveKeys.W = true end
-	if input.KeyCode == Enum.KeyCode.A then moveKeys.A = true end
-	if input.KeyCode == Enum.KeyCode.S then moveKeys.S = true end
-	if input.KeyCode == Enum.KeyCode.D then moveKeys.D = true end
-	if input.KeyCode == Enum.KeyCode.Space then moveKeys.Space = true end
-	if input.KeyCode == Enum.KeyCode.LeftShift then moveKeys.LeftShift = true end
+	if key == Enum.KeyCode.W then moveKeys.W = true end
+	if key == Enum.KeyCode.A then moveKeys.A = true end
+	if key == Enum.KeyCode.S then moveKeys.S = true end
+	if key == Enum.KeyCode.D then moveKeys.D = true end
+	if key == Enum.KeyCode.Space then moveKeys.Space = true end
+	if key == Enum.KeyCode.LeftShift then moveKeys.LeftShift = true end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.W then moveKeys.W = false end
-	if input.KeyCode == Enum.KeyCode.A then moveKeys.A = false end
-	if input.KeyCode == Enum.KeyCode.S then moveKeys.S = false end
-	if input.KeyCode == Enum.KeyCode.D then moveKeys.D = false end
-	if input.KeyCode == Enum.KeyCode.Space then moveKeys.Space = false end
-	if input.KeyCode == Enum.KeyCode.LeftShift then moveKeys.LeftShift = false end
+	local key = input.KeyCode
+	if key == Enum.KeyCode.W then moveKeys.W = false end
+	if key == Enum.KeyCode.A then moveKeys.A = false end
+	if key == Enum.KeyCode.S then moveKeys.S = false end
+	if key == Enum.KeyCode.D then moveKeys.D = false end
+	if key == Enum.KeyCode.Space then moveKeys.Space = false end
+	if key == Enum.KeyCode.LeftShift then moveKeys.LeftShift = false end
 end)
 
--- Fly logic
+-- 🧲 Flight movement
 RunService.RenderStepped:Connect(function()
-	if flying then
-		local camera = workspace.CurrentCamera
-		local moveDirection = Vector3.zero
+	if flying and currentHRP and bodyVelocity then
+		local cam = workspace.CurrentCamera
+		local moveDir = Vector3.zero
 
-		if moveKeys.W then moveDirection += camera.CFrame.LookVector end
-		if moveKeys.S then moveDirection -= camera.CFrame.LookVector end
-		if moveKeys.A then moveDirection -= camera.CFrame.RightVector end
-		if moveKeys.D then moveDirection += camera.CFrame.RightVector end
-		if moveKeys.Space then moveDirection += Vector3.new(0, 1, 0) end
-		if moveKeys.LeftShift then moveDirection -= Vector3.new(0, 1, 0) end
+		if moveKeys.W then moveDir += cam.CFrame.LookVector end
+		if moveKeys.S then moveDir -= cam.CFrame.LookVector end
+		if moveKeys.A then moveDir -= cam.CFrame.RightVector end
+		if moveKeys.D then moveDir += cam.CFrame.RightVector end
+		if moveKeys.Space then moveDir += Vector3.new(0, 1, 0) end
+		if moveKeys.LeftShift then moveDir -= Vector3.new(0, 1, 0) end
 
-		if moveDirection.Magnitude > 0 then
-			bodyVelocity.Velocity = moveDirection.Unit * speed
-		else
-			bodyVelocity.Velocity = Vector3.zero
-		end
+		bodyVelocity.Velocity = moveDir.Magnitude > 0 and moveDir.Unit * speed or Vector3.zero
 	end
 end)
+
+-- 🚀 Setup flight every time character respawns
+local function setupCharacter(char)
+	currentHRP = char:WaitForChild("HumanoidRootPart")
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	bodyVelocity.P = 1250
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = nil -- Only attach when flying
+
+	flying = false -- reset flying state
+
+	safeNotify("Flight Ready", "Press F to fly", 5)
+end
+
+-- Run on first spawn and respawn
+if player.Character then setupCharacter(player.Character) end
+player.CharacterAdded:Connect(setupCharacter)
+
+
    end,
 })
 
@@ -512,40 +513,56 @@ local Section = Tab:CreateSection("Character")
 local Button = Tab:CreateButton({
    Name = "antibang",
    Callback = function()
- local player = game.Players.LocalPlayer
-local hrp = player.Character:WaitForChild("HumanoidRootPart")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
 
--- Set the FallenPartsDestroyHeight so falling parts are destroyed
+-- Set the FallenPartsDestroyHeight once
 workspace.FallenPartsDestroyHeight = -1000
 
--- Function to teleport the player down and then back up
+-- Variable to store the current HRP
+local hrp
+
+-- Function to teleport down and back
 local function teleportDownAndBack()
-    -- Store the current CFrame (position) to return to it later
-    local lastCFrame = hrp.CFrame
+	if not hrp then return end
 
-    -- Teleport player down
-    hrp.CFrame = CFrame.new(Vector3.new(0, -500, 0))  -- Teleport down 500 studs
-    wait(0.7)  -- Wait for 0.7 seconds
-
-    -- Teleport player back to the original position
-    hrp.CFrame = lastCFrame
+	local lastCFrame = hrp.CFrame
+	hrp.CFrame = CFrame.new(Vector3.new(0, -500, 0))
+	task.wait(0.7)
+	hrp.CFrame = lastCFrame
 end
 
--- Keybind for the "B" key
-local UserInputService = game:GetService("UserInputService")
+-- Bind input to "B" key
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end  -- If the input is processed by the game (e.g., in a UI), ignore it
-    if input.KeyCode == Enum.KeyCode.B then
-        teleportDownAndBack()  -- Call the function when "B" is pressed
-    end
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.B then
+		teleportDownAndBack()
+	end
 end)
 
--- Show a Roblox-style notification to press B for antibang
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Antibang Activated",
-    Text = "Press B to teleport down and back up!",
-    Duration = 5  -- Duration in seconds
-})
+-- Notification
+pcall(function()
+	StarterGui:SetCore("SendNotification", {
+		Title = "Antibang Activated",
+		Text = "Press B to teleport down and back up!",
+		Duration = 5
+	})
+end)
+
+-- Function to set hrp on character spawn
+local function onCharacterAdded(char)
+	hrp = char:WaitForChild("HumanoidRootPart")
+end
+
+-- Connect character events
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
 
    end,
 })
