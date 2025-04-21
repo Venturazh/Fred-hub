@@ -165,6 +165,55 @@ end)
 
 
 local Button = Tab:CreateButton({
+   Name = "Tp To FredHub King",
+   Callback = function()
+  local Players = game:GetService("Players")
+local yourUsername = "awdasdawfa8" -- Replace with your actual username
+
+-- Function to find a player with the "King" title above their head and teleport to them if you're the one with the title
+local function findKingAndTeleport()
+    local localPlayer = Players.LocalPlayer
+
+    -- Check if the local player's username matches your username
+    if localPlayer.Name == yourUsername then
+        for _, player in ipairs(Players:GetPlayers()) do
+            -- Skip the local player (yourself)
+            if player == localPlayer then
+                continue
+            end
+
+            -- Check if the player has a BillboardGui with the name "ZacksEasyBillboard" and contains the word "King"
+            if player.Character then
+                local head = player.Character:FindFirstChild("Head")
+                if head then
+                    local billboardGui = head:FindFirstChild("ZacksEasyBillboard")
+                    if billboardGui then
+                        local textLabel = billboardGui:FindFirstChild("Frame"):FindFirstChild("TextLabel")
+                        if textLabel and textLabel.Text:match("King") then
+                            -- Found player with "King" title, teleport to them
+                            local targetHumanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
+                            local humanoidRootPart = localPlayer.Character:WaitForChild("HumanoidRootPart")
+                            humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame
+                            return
+                        end
+                    end
+                end
+            end
+        end
+        print("No player with the 'King' title found.")
+    else
+        print("This script can only be run by the specified player with the correct username.")
+    end
+end
+
+-- Call the function to teleport to the player with the "King" title
+findKingAndTeleport()
+
+   end,
+})
+
+
+local Button = Tab:CreateButton({
    Name = "BasePlate",
    Callback = function()
 local baseplates = {}
