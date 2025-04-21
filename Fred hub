@@ -271,14 +271,11 @@ player.CharacterAdded:Connect(setupCharacter)
    end,
 })
 
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local camera = workspace.CurrentCamera
 
 -- ⚙️ Speed control
@@ -293,40 +290,59 @@ local moveKeys = {
     D = false
 }
 
--- ⬅️ Input Began
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.W then moveKeys.W = true end
-    if input.KeyCode == Enum.KeyCode.A then moveKeys.A = true end
-    if input.KeyCode == Enum.KeyCode.S then moveKeys.S = true end
-    if input.KeyCode == Enum.KeyCode.D then moveKeys.D = true end
-end)
+local humanoidRootPart
 
--- ➡️ Input Ended
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.W then moveKeys.W = false end
-    if input.KeyCode == Enum.KeyCode.A then moveKeys.A = false end
-    if input.KeyCode == Enum.KeyCode.S then moveKeys.S = false end
-    if input.KeyCode == Enum.KeyCode.D then moveKeys.D = false end
-end)
+-- Function to initialize character and humanoid root part
+local function initializeCharacter(character)
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    
+    -- 🧠 CFrame movement loop
+    RunService.Heartbeat:Connect(function(dt)
+        if not cframeActive or not humanoidRootPart then return end
 
--- 🧠 CFrame movement loop
-RunService.Heartbeat:Connect(function(dt)
-    if not cframeActive then return end
+        local direction = Vector3.zero
 
-    local direction = Vector3.zero
+        -- Calculate movement direction based on input keys
+        if moveKeys.W then direction += camera.CFrame.LookVector end
+        if moveKeys.S then direction -= camera.CFrame.LookVector end
+        if moveKeys.A then direction -= camera.CFrame.RightVector end
+        if moveKeys.D then direction += camera.CFrame.RightVector end
 
-    if moveKeys.W then direction += camera.CFrame.LookVector end
-    if moveKeys.S then direction -= camera.CFrame.LookVector end
-    if moveKeys.A then direction -= camera.CFrame.RightVector end
-    if moveKeys.D then direction += camera.CFrame.RightVector end
+        if direction.Magnitude > 0 then
+            -- Normalize the direction to ensure consistent movement speed
+            direction = direction.Unit * cframeSpeed * dt
 
-    if direction.Magnitude > 0 then
-        -- Normalize the direction to ensure consistent movement speed
-        direction = direction.Unit * cframeSpeed * dt
-        local lift = Vector3.new(0, 0.25, 0) -- slight upward to avoid floor sink
-        humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction + lift
-    end
+            -- Get the current position and modify only X, Z while keeping Y constant
+            local currentPosition = humanoidRootPart.Position
+            humanoidRootPart.CFrame = CFrame.new(currentPosition.X, currentPosition.Y, currentPosition.Z) + direction
+        end
+    end)
+
+    -- 🏃‍♂️ Input Began
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.W then moveKeys.W = true end
+        if input.KeyCode == Enum.KeyCode.A then moveKeys.A = true end
+        if input.KeyCode == Enum.KeyCode.S then moveKeys.S = true end
+        if input.KeyCode == Enum.KeyCode.D then moveKeys.D = true end
+    end)
+
+    -- ➡️ Input Ended
+    UserInputService.InputEnded:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.W then moveKeys.W = false end
+        if input.KeyCode == Enum.KeyCode.A then moveKeys.A = false end
+        if input.KeyCode == Enum.KeyCode.S then moveKeys.S = false end
+        if input.KeyCode == Enum.KeyCode.D then moveKeys.D = false end
+    end)
+end
+
+-- Initialize for the first time
+initializeCharacter(player.Character or player.CharacterAdded:Wait())
+
+-- ⚠️ Reset the character initialization after respawn
+player.CharacterAdded:Connect(function(character)
+    -- Wait for the character to load fully
+    initializeCharacter(character)
 end)
 
 -- 🟢 UI - Toggle
@@ -353,156 +369,166 @@ local Slider = Tab:CreateSlider({
 })
 
 
+-- Stop Button
+local StopButton = Tab:CreateButton({
+    Name = "Gayy",
+    Callback = function()
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "ModernGUI"
 
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 300, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Draggable = true
+MainFrame.Active = true
 
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = MainFrame
+UICorner.CornerRadius = UDim.new(0, 20)
 
+local TitleBar = Instance.new("Frame")
+TitleBar.Parent = MainFrame
+TitleBar.Size = UDim2.new(1, 0, 0, 25)
+TitleBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TitleBar.BorderSizePixel = 0
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = TitleBar
+TitleLabel.Size = UDim2.new(0, 50, 1, 0)
+TitleLabel.Position = UDim2.new(0, 5, 0, 0)
+TitleLabel.Text = "Gay"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextSize = 14
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Parent = TitleBar
+CloseButton.Size = UDim2.new(0, 25, 1, 0)
+CloseButton.Position = UDim2.new(1, -25, 0, 0)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Parent = TitleBar
+MinimizeButton.Size = UDim2.new(0, 50, 1, 0)
+MinimizeButton.Position = UDim2.new(1, -75, 0, 0)
+MinimizeButton.Text = "Hide"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+MinimizeButton.BorderSizePixel = 0
+
+local minimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    if not minimized then
+        MainFrame.Size = UDim2.new(0, 300, 0, 25)
+        MinimizeButton.Text = "Show"
+    else
+        MainFrame.Size = UDim2.new(0, 300, 0, 150)
+        MinimizeButton.Text = "Hide"
+    end
+    minimized = not minimized
+end)
+
+local TargetTextBox = Instance.new("TextBox")
+TargetTextBox.Parent = MainFrame
+TargetTextBox.Size = UDim2.new(0.9, 0, 0, 30)
+TargetTextBox.Position = UDim2.new(0.05, 0, 0.3, 0)
+TargetTextBox.PlaceholderText = "Enter target name"
+TargetTextBox.Text = ""
+TargetTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetTextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TargetTextBox.BorderSizePixel = 0
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Parent = MainFrame
+ToggleButton.Size = UDim2.new(0.9, 0, 0, 30)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.6, 0)
+ToggleButton.Text = "Start"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+ToggleButton.BorderSizePixel = 0
 
 local following = false
-local activeAnimation = nil
 local targetPlayer = nil
-local followingThread = nil  -- To track the following loop
-local savedPosition = nil  -- To store the initial position
+local animationId = "10714360343"
+local activeAnimation
 
--- Function to break all joints and make the character ragdoll
-local function breakJoints(character)
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            for _, joint in pairs(part:GetChildren()) do
-                if joint:IsA("Motor6D") then
-                    joint:Destroy()  -- Break all joints (Motor6D)
-                end
-            end
-        end
-    end
-end
-
--- Follow logic in Input (you already have this from earlier):
-local following = false
-local activeAnimation = nil
-local targetPlayer = nil
-local followingThread = nil  -- To track the following loop
-local savedPosition = nil  -- To store the initial position
-
--- Function to break all joints and make the character ragdoll
-local function breakJoints(character)
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            for _, joint in pairs(part:GetChildren()) do
-                if joint:IsA("Motor6D") then
-                    joint:Destroy()  -- Break all joints (Motor6D)
-                end
-            end
-        end
-    end
-end
-
--- Follow logic in Input (you already have this from earlier):
-local Input = Tab:CreateInput({
-    Name = "Target Name",
-    CurrentValue = "",
-    PlaceholderText = "Enter target's username",
-    RemoveTextAfterFocusLost = false,
-    Flag = "Input1",
-    Callback = function(Text)
-        if following then return end
-
+ToggleButton.MouseButton1Click:Connect(function()
+    if not following then
+        local targetName = TargetTextBox.Text:lower()
         targetPlayer = nil
-        for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-            if player.Name:lower():find(Text:lower()) or player.DisplayName:lower():find(Text:lower()) then
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Name:lower():find(targetName) or player.DisplayName:lower():find(targetName) then
                 targetPlayer = player
                 break
             end
         end
-
+        
         if targetPlayer and targetPlayer.Character then
             following = true
-
-            -- Save initial position to return after stopping
-            local LocalPlayer = game.Players.LocalPlayer
-            savedPosition = LocalPlayer.Character.HumanoidRootPart.Position
-
-            -- Set animation
-            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            ToggleButton.Text = "Stop"
+            
+            local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if humanoid then
                 local animation = Instance.new("Animation")
-                animation.AnimationId = "rbxassetid://10714360343"
+                animation.AnimationId = "rbxassetid://" .. animationId
                 activeAnimation = humanoid:LoadAnimation(animation)
                 activeAnimation:Play()
             end
 
-            -- Start the following thread
-            followingThread = task.spawn(function()
-                while following and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-                    if not myRoot then break end
-
-                    for i = 1, 10 do
-                        myRoot.CFrame = targetRoot.CFrame + (targetRoot.CFrame.LookVector * (i / 2))
-                        task.wait(0.01)
-                    end
-                    for i = 10, 1, -1 do
-                        myRoot.CFrame = targetRoot.CFrame + (targetRoot.CFrame.LookVector * (i / 2))
-                        task.wait(0.01)
+            task.spawn(function()
+                local forward = true
+                while following and targetPlayer and targetPlayer.Character and targetPlayer.Character.PrimaryPart do
+                    local targetCharacter = targetPlayer.Character
+                    if targetCharacter and targetCharacter.PrimaryPart then
+                        local TargetPrimary = targetCharacter.PrimaryPart
+                        for i=1,10 do
+                            local Forward = TargetPrimary.CFrame + (TargetPrimary.CFrame.LookVector * (i/5))
+                            game.Players.LocalPlayer.Character.PrimaryPart.CFrame = Forward
+                            task.wait(0.01)
+                        end
+                        for i=10,1,-1 do
+                            local Forward = TargetPrimary.CFrame + (TargetPrimary.CFrame.LookVector * (i/5))
+                            game.Players.LocalPlayer.Character.PrimaryPart.CFrame = Forward
+                            task.wait(0.01)
+                        end
+                    else
+                        following = false
+                        ToggleButton.Text = "Start"
+                        break
                     end
                 end
-
-                following = false
             end)
         else
-            warn("Target not found or has no character!")
+            print("Target not found!")
         end
-    end,
-})
-
--- 🔴 Stop Button
-local StopButton = Tab:CreateButton({
-    Name = "Stop Following",
-    Callback = function()
+    else
         following = false
-        targetPlayer = nil
-
-        -- Stop the animation if it is playing
+        ToggleButton.Text = "Start"
+        
         if activeAnimation then
             activeAnimation:Stop()
             activeAnimation = nil
         end
-
-        -- Stop the following thread if it's running
-        if followingThread then
-            followingThread = nil  -- This effectively cancels the loop
-        end
-
-        -- Reset movement (force reset and then return to saved position)
-        local LocalPlayer = game.Players.LocalPlayer
-        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-
-        if humanoid then
-            -- Break all joints to make the character ragdoll
-            breakJoints(char)
-
-            -- Teleport back to the saved position after ragdoll
-            if savedPosition then
-                -- Teleport to the exact saved position
-                char:SetPrimaryPartCFrame(CFrame.new(savedPosition))
-                savedPosition = nil  -- Reset the saved position
-            end
-        end
-
-        -- Clear the input text when stop is clicked
-        Input:Set("", true)
+    end
+end)
     end,
 })
-
-
-
-
-
-
 
 
 
@@ -1329,3 +1355,47 @@ player.CharacterAdded:Connect(Animation)
    end,
 })
 
+local Tab = Window:CreateTab("🔥Misc🔥", nil) -- Title, Image
+
+local Section = Tab:CreateSection("Misc")
+
+local Button = Tab:CreateButton({
+   Name = "Rejoin",
+   Callback = function()
+ repeat
+    wait()  
+until game:IsLoaded() 
+game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId) 
+--diconnect and reconnect into the same server
+   end,
+})
+
+
+local Button = Tab:CreateButton({
+   Name = "Server Hop",
+   Callback = function()
+   local Player = game.Players.LocalPlayer    
+local Http = game:GetService("HttpService")
+local TPS = game:GetService("TeleportService")
+local Api = "https://games.roblox.com/v1/games/"
+
+local _place,_id = game.PlaceId, game.JobId
+local _servers = Api.._place.."/servers/Public?sortOrder=Desc&limit=100"
+function ListServers(cursor)
+   local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
+   return Http:JSONDecode(Raw)
+end
+
+local Next; repeat
+   local Servers = ListServers(Next)
+   for i,v in next, Servers.data do
+       if v.playing < v.maxPlayers and v.id ~= _id then
+           local s,r = pcall(TPS.TeleportToPlaceInstance,TPS,_place,v.id,Player)
+           if s then break end
+       end
+   end
+   
+   Next = Servers.nextPageCursor
+until not Next
+   end,
+})
