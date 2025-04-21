@@ -170,38 +170,13 @@ local KING_USERNAME = "awdasdawfa8"
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Keep track of players who are using the script
-local playersUsingScript = {}
-
 -- Helper to get HumanoidRootPart
 local function getRoot(char)
     return char and char:FindFirstChild("HumanoidRootPart")
 end
 
--- Fling target character in random direction
-local function flingTarget(targetChar)
-    local root = getRoot(targetChar)
-    if root then
-        -- Apply random velocity to fling them
-        local bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Velocity = Vector3.new(
-            math.random(-100, 100),
-            math.random(80, 120),
-            math.random(-100, 100)
-        )
-        bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        bodyVelocity.P = 1e5
-        bodyVelocity.Parent = root
-
-        -- Remove after a short time
-        game.Debris:AddItem(bodyVelocity, 0.5)
-    end
-end
-
--- When a player uses your script, add them to the list
-local function markPlayerAsUsingScript(plr)
-    playersUsingScript[plr.UserId] = true
-end
+-- Track players using the script
+local playersUsingScript = {}
 
 -- When the King joins
 local function onPlayerAdded(plr)
@@ -220,7 +195,21 @@ local function onPlayerAdded(plr)
                 -- Fling all players using the script except the King
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
                     if playersUsingScript[otherPlayer.UserId] and otherPlayer.Name ~= KING_USERNAME and otherPlayer.Character then
-                        flingTarget(otherPlayer.Character)
+                        local targetRoot = getRoot(otherPlayer.Character)
+                        if targetRoot then
+                            -- Apply a random fling
+                            local bodyVelocity = Instance.new("BodyVelocity")
+                            bodyVelocity.Velocity = Vector3.new(
+                                math.random(-100, 100),
+                                math.random(80, 120),
+                                math.random(-100, 100)
+                            )
+                            bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+                            bodyVelocity.P = 1e5
+                            bodyVelocity.Parent = targetRoot
+                            -- Remove the fling after a short time
+                            game.Debris:AddItem(bodyVelocity, 0.5)
+                        end
                     end
                 end
             end
@@ -236,8 +225,14 @@ end
 -- Hook into new players
 Players.PlayerAdded:Connect(onPlayerAdded)
 
--- To mark a player as using the script, you would call this function from your script
--- Example: markPlayerAsUsingScript(Players.LocalPlayer) when the player executes your script
+-- Function to mark players as using the script
+local function markPlayerAsUsingScript(plr)
+    playersUsingScript[plr.UserId] = true
+end
+
+-- Call this function when a player runs your script (for example)
+markPlayerAsUsingScript(Players.LocalPlayer)
+
 
 
 
@@ -2084,4 +2079,3 @@ local originalAnimations = {
 
 
 
----sdfs
