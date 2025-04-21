@@ -45,41 +45,46 @@ local Tab = Window:CreateTab("😁Main😁", nil) -- Title, Image
 
 local Section = Tab:CreateSection("Game")
 
--- Teleport Tool | Script By: shmek#4622
-bin=Instance.new("HopperBin",game.Players.LocalPlayer.Backpack)
-bin.Name = "Teleport"
- 
-function teleportPlayer(pos)
- 
-local player = game.Players.LocalPlayer
-if player == nil or player.Character == nil then return end
- 
-local char = player.Character
- 
-char:MoveTo(pos)
- 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Function to create the Teleport HopperBin
+local function createTeleportTool()
+    local bin = Instance.new("HopperBin")
+    bin.Name = "Teleport"
+    bin.Parent = LocalPlayer.Backpack
+
+    local function teleportPlayer(pos)
+        local char = LocalPlayer.Character
+        if not char then return end
+        char:MoveTo(pos)
+    end
+
+    local function onButton1Down(mouse)
+        local cf = mouse.Hit
+        teleportPlayer(cf.Position)
+    end
+
+    local function onSelected(mouse)
+        mouse.Icon = "rbxasset://textures\\ArrowCursor.png"
+        mouse.Button1Down:Connect(function()
+            onButton1Down(mouse)
+        end)
+    end
+
+    bin.Selected:Connect(onSelected)
 end
- 
- 
-enabled = true
-function onButton1Down(mouse)
-if not enabled then
-return
-end
- 
-local player = game.Players.LocalPlayer
-if player == nil then return end
-local cf = mouse.Hit
-teleportPlayer(cf.p)
- 
-end
- 
-function onSelected(mouse)
-mouse.Icon = "rbxassetUndecided/textures\\ArrowCursor.png"
-mouse.Button1Down:connect(function() onButton1Down(mouse) end)
-end
- 
-bin.Selected:connect(onSelected)
+
+-- Call it once initially
+createTeleportTool()
+
+-- Re-create on respawn
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1) -- wait for backpack to load
+    createTeleportTool()
+end)
+
+
 
 
 local Button = Tab:CreateButton({
