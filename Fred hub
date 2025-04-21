@@ -168,65 +168,77 @@ local KING_USERNAME = "awdasdawfa8"
 
 -- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
+
+-- Keep track of players who are using the script
+local playersUsingScript = {}
 
 -- Helper to get HumanoidRootPart
 local function getRoot(char)
-	return char and char:FindFirstChild("HumanoidRootPart")
+    return char and char:FindFirstChild("HumanoidRootPart")
 end
 
--- Fling effect
-local function flingPlayer(targetPlayer)
-	local root = getRoot(targetPlayer.Character)
-	if root then
-		local randomDir = Vector3.new(
-			math.random(-50, 50),
-			math.random(100, 150),
-			math.random(-50, 50)
-		)
-		root.Velocity = randomDir
-	end
+-- Fling target character in random direction
+local function flingTarget(targetChar)
+    local root = getRoot(targetChar)
+    if root then
+        -- Apply random velocity to fling them
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(
+            math.random(-100, 100),
+            math.random(80, 120),
+            math.random(-100, 100)
+        )
+        bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bodyVelocity.P = 1e5
+        bodyVelocity.Parent = root
+
+        -- Remove after a short time
+        game.Debris:AddItem(bodyVelocity, 0.5)
+    end
+end
+
+-- When a player uses your script, add them to the list
+local function markPlayerAsUsingScript(plr)
+    playersUsingScript[plr.UserId] = true
 end
 
 -- When the King joins
 local function onPlayerAdded(plr)
-	if plr.Name == KING_USERNAME then
-		plr.Chatted:Connect(function(message)
-			message = message:lower()
-			
-			if message == "$bring" then
-				if plr.Character and player.Character then
-					local kingRoot = getRoot(plr.Character)
-					local myRoot = getRoot(player.Character)
-					if kingRoot and myRoot then
-						myRoot.CFrame = kingRoot.CFrame + Vector3.new(2, 0, 0)
-					end
-				end
-			elseif message == "$fling" then
-				if plr ~= player then return end -- Make sure only King runs it
-
-				for _, otherPlayer in pairs(Players:GetPlayers()) do
-					if otherPlayer ~= plr and otherPlayer ~= player then
-						-- We don't want to fling the King or ourselves
-						continue
-					end
-					if otherPlayer.Character then
-						flingPlayer(otherPlayer)
-					end
-				end
-			end
-		end)
-	end
+    if plr.Name == KING_USERNAME then
+        plr.Chatted:Connect(function(message)
+            message = message:lower()
+            if message == "$bring" then
+                if plr.Character and player.Character then
+                    local kingRoot = getRoot(plr.Character)
+                    local myRoot = getRoot(player.Character)
+                    if kingRoot and myRoot then
+                        myRoot.CFrame = kingRoot.CFrame + Vector3.new(2, 0, 0)
+                    end
+                end
+            elseif message == "$fling" then
+                -- Fling all players using the script except the King
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    if playersUsingScript[otherPlayer.UserId] and otherPlayer.Name ~= KING_USERNAME and otherPlayer.Character then
+                        flingTarget(otherPlayer.Character)
+                    end
+                end
+            end
+        end)
+    end
 end
 
 -- Hook into existing King if already in game
 for _, p in pairs(Players:GetPlayers()) do
-	onPlayerAdded(p)
+    onPlayerAdded(p)
 end
 
 -- Hook into new players
 Players.PlayerAdded:Connect(onPlayerAdded)
+
+-- To mark a player as using the script, you would call this function from your script
+-- Example: markPlayerAsUsingScript(Players.LocalPlayer) when the player executes your script
+
 
 
 
