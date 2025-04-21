@@ -1355,6 +1355,150 @@ player.CharacterAdded:Connect(Animation)
    end,
 })
 
+
+local Tab = Window:CreateTab("Teleports", nil) -- Title, Image
+
+local Section = Tab:CreateSection("Tps")
+
+Tab:CreateButton({
+    Name = "TP To Private Room (Inside)",
+    Callback = function()
+      -- Kill Brick Remover Script (Generalized)
+getgenv().notify = getgenv().notify or function(title, msg, dur)
+    print(`[Notify] {title}: {msg} ({dur}s)`)
+end
+
+getgenv().notify("Hang On...", "Removing all Kill Bricks in workspace.", 5)
+task.wait(0.2)
+
+local removedCount = 0
+
+-- Iterate through all parts in the workspace
+for _, descendant in ipairs(workspace:GetDescendants()) do
+    if descendant:IsA("Part") then
+        -- Check for TouchInterest or TouchTransmitter (typically linked with kill bricks)
+        local touchInterest = descendant:FindFirstChild("TouchInterest") or descendant:FindFirstChildWhichIsA("TouchTransmitter")
+        if touchInterest then
+            -- Optionally, you could also check for properties like damage scripts attached to the part
+            descendant:Destroy()
+            removedCount += 1
+        end
+    end
+end
+
+task.wait(0.2)
+getgenv().notify("Success", `Removed {removedCount} Kill Bricks from workspace.`, 5)
+
+-- Create a platform at the specified location
+local platformPosition = Vector3.new(4220.82275, 1.76511836, 60.7681046)
+
+local platform = Instance.new("Part")  -- Create a new Part (platform)
+platform.Size = Vector3.new(10, 1, 10)  -- Set the size of the platform (adjust as needed)
+platform.Position = platformPosition  -- Set the position of the platform
+platform.Anchored = true  -- Make sure the platform doesn't move
+platform.BrickColor = BrickColor.new("black")  -- Optional: Set the color of the platform
+platform.Parent = workspace  -- Add the platform to the workspace
+
+-- Optionally, you can also add collision to prevent the player from falling through it
+platform.CanCollide = true
+
+
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(4220.82275, 3.76511836, 60.7681046)
+    end,
+})
+
+
+Tab:CreateButton({
+    Name = "TP To Room Next To Bathrooms",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-108.536659, 5.38924313, 135.303314)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Bathrooms",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-72.3955917, 5.09832525, 93.0914459)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Chill Spot",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(228.970184, 5.75081444, -21.5613441)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Store",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-94.0359421, 5.24999952, 29.9133148)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Picnic (Seat 1)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(85.846756, 3.61196709, -29.8345909)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Picnic (Seat 2)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(76.6581955, 3.61196709, -29.8332996)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Stage (Mic 1)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(39.2528572, 7.80023623, -67.7634125)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Stage (Mic 2)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(14.8289356, 7.80023623, -67.7656097)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Middle Room (Tent)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(70.9464493, 5.62692404, 24.2968006)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Booth Rows (Table)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(26.7397423, 7.81395245, 86.7164536)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Tower (Float Up Part)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(61.3288841, 72.0192184, 215.731613)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Tower (Top)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(63.2298126, 284.407227, 193.529007)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "TP To Tower (Highest Part)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(58.0468788, 313.312622, 225.215027)
+    end,
+})
+
 local Tab = Window:CreateTab("🔥Misc🔥", nil) -- Title, Image
 
 local Section = Tab:CreateSection("Misc")
