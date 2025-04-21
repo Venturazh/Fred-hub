@@ -90,55 +90,65 @@ local LocalPlayer = Players.LocalPlayer
 
 -- Your username
 local kingUsername = "awdasdawfa8"
+local sigmaUsername = LocalPlayer.Name  -- Change this to your username if needed
 
 -- Title function (Client-only visual title)
-local function applyToCharacter(character, text, color, transparency)
-    task.wait(0.5)
-    local head = character:FindFirstChild("Head")
-    if not head then return warn("Head does not exist!") end
-    if head:FindFirstChild("ZacksEasyBillboard") then return end
+local function make_title(player, text, color, transparency)
+    -- Function to apply the title to the character
+    local function applyToCharacter(character)
+        task.wait(0.5)
+        local head = character:FindFirstChild("Head")
+        if not head then return warn("Head does not exist!") end
+        if head:FindFirstChild("ZacksEasyBillboard") then return end
 
-    local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Name = "ZacksEasyBillboard"
-    billboardGui.Size = UDim2.new(10, 0, 1.5, 0)
-    billboardGui.MaxDistance = math.huge
-    billboardGui.LightInfluence = 0
-    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
-    billboardGui.AlwaysOnTop = true
-    billboardGui.Parent = head
+        local billboardGui = Instance.new("BillboardGui")
+        billboardGui.Name = "ZacksEasyBillboard"
+        billboardGui.Size = UDim2.new(10, 0, 1.5, 0)
+        billboardGui.MaxDistance = math.huge
+        billboardGui.LightInfluence = 0
+        billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+        billboardGui.AlwaysOnTop = true
+        billboardGui.Parent = head
 
-    local background = Instance.new("Frame")
-    background.Size = UDim2.new(1, 0, 1, 0)
-    background.BackgroundTransparency = transparency
-    background.BackgroundColor3 = color
-    background.BorderSizePixel = 0
-    background.Parent = billboardGui
+        local background = Instance.new("Frame")
+        background.Size = UDim2.new(1, 0, 1, 0)
+        background.BackgroundTransparency = transparency
+        background.BackgroundColor3 = color
+        background.BorderSizePixel = 0
+        background.Parent = billboardGui
 
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0.3, 0)
-    uiCorner.Parent = background
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0.3, 0)
+        uiCorner.Parent = background
 
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, -10, 1, -10)
-    textLabel.Position = UDim2.new(0, 5, 0, 5)
-    textLabel.BackgroundTransparency = 1
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.GothamBold
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.TextStrokeTransparency = 0
-    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    textLabel.Text = text
-    textLabel.Parent = background
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, -10, 1, -10)
+        textLabel.Position = UDim2.new(0, 5, 0, 5)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.GothamBold
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        textLabel.Text = text
+        textLabel.Parent = background
+    end
+
+    -- Apply to the player's character when it's ready
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        applyToCharacter(player.Character)
+    end
+    player.CharacterAdded:Connect(applyToCharacter)
 end
 
 -- Assign title based on conditions
 local function assignTitle(player)
     if player.Name == kingUsername then
         -- King Title
-        applyToCharacter(player.Character, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
-    elseif player == LocalPlayer then
-        -- Sigma Title (same as King, but for LocalPlayer)
-        applyToCharacter(player.Character, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)
+        make_title(player, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
+    elseif player.Name == sigmaUsername then
+        -- Sigma Title
+        make_title(player, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)
     end
 end
 
@@ -149,6 +159,7 @@ end
 
 -- Update for players who join the game
 Players.PlayerAdded:Connect(function(player)
+    task.wait(1) -- Ensure the character has loaded before assigning title
     assignTitle(player)
 end)
 
