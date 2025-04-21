@@ -84,7 +84,7 @@ LocalPlayer.CharacterAdded:Connect(function()
     createTeleportTool()
 end)
 
---- Services
+-- Services
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -120,7 +120,7 @@ local function assignTitle(player)
     if player.Name == kingUsername then
         make_title(player, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
     elseif player == LocalPlayer then
-        make_title(player, "👧 Fredhub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)
+        make_title(player, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)  -- Same title creation for the local player
     end
 end
 
