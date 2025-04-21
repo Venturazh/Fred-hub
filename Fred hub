@@ -740,49 +740,68 @@ end
 local isToggling = false
 local originalPosition = nil
 local player = game.Players.LocalPlayer
-local hrp = player.Character and player.Character:WaitForChild("HumanoidRootPart") -- Ensure we access HumanoidRootPart
+local hrp = nil -- We'll assign this dynamically
 
-local distance = 12 -- Set the distance for the teleport
-local delayTime = 0.05 -- Set the delay time for teleportation loop
+local distance = 12 -- Teleport distance
+local delayTime = 0.05 -- Delay between teleports
 
--- Function to start teleporting
-local function teleportLoop()
-    local direction = -1
-    while isToggling do
-        -- Check if HumanoidRootPart is available
-        if hrp then
-            if not originalPosition then
-                originalPosition = hrp.CFrame -- Store the original position
-            end
-            hrp.CFrame = hrp.CFrame * CFrame.new(distance * direction, 0, 0) -- Move along X-axis
-            direction *= -1 -- Change direction for back and forth movement
-        end
-        task.wait(delayTime) -- Wait before continuing teleport
-    end
+-- Function to update HumanoidRootPart safely after respawn
+local function updateHRP()
+	local char = player.Character or player.CharacterAdded:Wait()
+	hrp = char:WaitForChild("HumanoidRootPart")
 end
 
--- Function to stop teleporting and reset position
-local function stopTeleporting()
-    if hrp and originalPosition then
-        hrp.CFrame = originalPosition -- Return to the original position
-        originalPosition = nil
-    end
+-- Handle character respawn
+player.CharacterAdded:Connect(function()
+	updateHRP()
+	-- If teleporting is still enabled, resume loop
+	if isToggling then
+		task.spawn(teleportLoop)
+	end
+end)
+
+-- Start teleport loop
+function teleportLoop()
+	local direction = -1
+	while isToggling do
+		if not hrp then updateHRP() end
+
+		if not originalPosition then
+			originalPosition = hrp.CFrame
+		end
+
+		hrp.CFrame = hrp.CFrame * CFrame.new(distance * direction, 0, 0)
+		direction *= -1
+		task.wait(delayTime)
+	end
 end
+
+-- Stop teleport and return to original position
+function stopTeleporting()
+	if hrp and originalPosition then
+		hrp.CFrame = originalPosition
+	end
+	originalPosition = nil
+end
+
+-- Initial HRP assignment
+updateHRP()
 
 -- Rayfield Toggle
 local Toggle = Tab:CreateToggle({
-    Name = "FlashStep",
-    CurrentValue = false,
-    Flag = "teleport_toggle", 
-    Callback = function(state)
-        isToggling = state
-        if isToggling then
-            teleportLoop() -- Start teleporting loop
-        else
-            stopTeleporting() -- Stop teleporting and return to the original position
-        end
-    end
+	Name = "FlashStep",
+	CurrentValue = false,
+	Flag = "teleport_toggle", 
+	Callback = function(state)
+		isToggling = state
+		if isToggling then
+			task.spawn(teleportLoop)
+		else
+			stopTeleporting()
+		end
+	end
 })
+
 
 
 
