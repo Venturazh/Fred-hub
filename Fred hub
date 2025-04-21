@@ -529,6 +529,7 @@ local Slider = Tab:CreateSlider({
 })
 
 
+
 -- Stop Button
 local StopButton = Tab:CreateButton({
     Name = "Gayy",
@@ -802,7 +803,63 @@ local Toggle = Tab:CreateToggle({
 	end
 })
 
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 
+-- Variables
+local noclipActive = false
+local stepConnection = nil
+
+-- Function to set collision state
+local function setCollision(state)
+	local character = player.Character
+	if character then
+		for _, part in pairs(character:GetDescendants()) do
+			if part:IsA("BasePart") and not part.Anchored then
+				part.CanCollide = state
+			end
+		end
+	end
+end
+
+-- Function to toggle noclip
+local function setNoClip(enabled)
+	noclipActive = enabled
+
+	-- Disconnect previous loop
+	if stepConnection then
+		stepConnection:Disconnect()
+		stepConnection = nil
+	end
+
+	if enabled then
+		stepConnection = RunService.Stepped:Connect(function()
+			setCollision(false)
+		end)
+	else
+		setCollision(true)
+	end
+end
+
+-- Restore after respawn
+player.CharacterAdded:Connect(function()
+	if noclipActive then
+		wait(1)
+		setNoClip(true)
+	end
+end)
+
+-- Rayfield Toggle
+Tab:CreateToggle({
+	Name = "Noclip",
+	CurrentValue = false,
+	Flag = "noclip_toggle",
+	Callback = function(state)
+		setNoClip(state)
+	end
+})
 
 
 local Tab = Window:CreateTab("Character", nil) -- Title, Image
@@ -1582,6 +1639,54 @@ player.CharacterAdded:Connect(Animation)
    end,
 })
 
+
+local Button = Tab:CreateButton({
+   Name = "CatWalk",
+   Callback = function()
+function Animation(Character)
+    Character:WaitForChild("Animate")
+    local humanoid = Character:WaitForChild("Humanoid")
+    local rootPart = Character:WaitForChild("HumanoidRootPart")
+
+    -- Anchor the player while updating animations
+    rootPart.Anchored = true
+
+    -- Stop all currently playing animations
+    local tracks = humanoid:GetPlayingAnimationTracks()
+    for _, track in ipairs(tracks) do
+        track:Stop()
+    end
+
+    -- Override default animations
+    local Animate = Character.Animate
+      Animate.idle.Animation1.AnimationId = "http://www.roblox.com/asset/?id=133806214992291"
+        Animate.idle.Animation2.AnimationId = "http://www.roblox.com/asset/?id=94970088341563"
+        Animate.walk:FindFirstChildOfClass("Animation").AnimationId = "http://www.roblox.com/asset/?id=109168724482748"
+        Animate.run:FindFirstChildOfClass("Animation").AnimationId = "http://www.roblox.com/asset/?id=81024476153754"
+        Animate.jump:FindFirstChildOfClass("Animation").AnimationId = "http://www.roblox.com/asset/?id=116936326516985"
+        Animate.climb:FindFirstChildOfClass("Animation").AnimationId = "http://www.roblox.com/asset/?id=119377220967554"
+        Animate.fall:FindFirstChildOfClass("Animation").AnimationId = "http://www.roblox.com/asset/?id=92294537340807"
+    -- Reset jump state
+    humanoid.Jump = false
+
+    -- Wait and unanchor
+    task.wait(1)
+    rootPart.Anchored = false
+end
+
+-- Apply to current character
+local player = game.Players.LocalPlayer
+Animation(player.Character or player.CharacterAdded:Wait())
+
+-- Reapply on respawn
+player.CharacterAdded:Connect(Animation)
+
+
+
+   end,
+})
+
+
 local Button = Tab:CreateButton({
    Name = "Popstar",
    Callback = function()
@@ -1666,7 +1771,7 @@ getgenv().notify("Success", `Removed {removedCount} Kill Bricks from workspace.`
 local platformPosition = Vector3.new(4220.82275, 1.76511836, 60.7681046)
 
 local platform = Instance.new("Part")  -- Create a new Part (platform)
-platform.Size = Vector3.new(10, 1, 10)  -- Set the size of the platform (adjust as needed)
+platform.Size = Vector3.new(50, 1, 50)  -- Set the size of the platform (adjust as needed)
 platform.Position = platformPosition  -- Set the position of the platform
 platform.Anchored = true  -- Make sure the platform doesn't move
 platform.BrickColor = BrickColor.new("black")  -- Optional: Set the color of the platform
@@ -1681,7 +1786,12 @@ platform.CanCollide = true
 })
 
 
-
+Tab:CreateButton({
+    Name = "TP To Private room (Roof)",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(4220.37842, 23.5336628, 61.3636169)
+    end,
+})
 
 
 Tab:CreateButton({
@@ -1930,4 +2040,6 @@ local originalAnimations = {
     run = nil
 }
 
---hello
+
+
+
