@@ -836,7 +836,7 @@ end
 -- Bind input to "B" key
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
-	if input.KeyCode == Enum.KeyCode.K then
+	if input.KeyCode == Enum.KeyCode.G then
 		teleportDownAndBack()
 	end
 end)
@@ -845,7 +845,7 @@ end)
 pcall(function()
 	StarterGui:SetCore("SendNotification", {
 		Title = "Antibang Activated",
-		Text = "Press K to teleport down and back up!",
+		Text = "Press G to teleport down and back up!",
 		Duration = 5
 	})
 end)
