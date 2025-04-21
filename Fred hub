@@ -96,6 +96,7 @@ local function make_title(player, text, color, transparency)
     local character = player.Character or player.CharacterAdded:Wait()
     local head = character:WaitForChild("Head")
 
+    -- Create the BillboardGui
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ZacksEasyHubTitle"
     billboard.Adornee = head
@@ -118,9 +119,11 @@ end
 -- Assign title based on conditions
 local function assignTitle(player)
     if player.Name == kingUsername then
+        -- King Title
         make_title(player, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
     elseif player == LocalPlayer then
-        make_title(player, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)  -- Same title creation for the local player
+        -- Make sure the title shows up for LocalPlayer
+        make_title(player, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)
     end
 end
 
@@ -129,10 +132,10 @@ for _, player in ipairs(Players:GetPlayers()) do
     assignTitle(player)
 end
 
+-- Update for players who join the game
 Players.PlayerAdded:Connect(function(player)
     assignTitle(player)
 end)
-
 
 
 local Button = Tab:CreateButton({
