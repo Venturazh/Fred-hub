@@ -639,6 +639,20 @@ local function disableCollision(character)
 	end
 end
 
+-- Function to enable player collision
+local function enableCollision(character)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		-- Re-enable collisions for the character
+		humanoid.PlatformStand = false
+		for _, part in pairs(character:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+	end
+end
+
 -- Function to follow and sit on the target player's head
 local function followTarget()
 	if not targetPlayer then return end
@@ -674,12 +688,41 @@ local function followTarget()
 	end)
 end
 
--- Stop following and reset
+-- Stop following and reset (with no fling and ground stuck fix)
 local function stopFollowing()
 	following = false
 	if followConnection then
 		followConnection:Disconnect()
 		followConnection = nil
+	end
+
+	-- Reset the character to prevent flinging or getting stuck in the ground
+	local character = LocalPlayer.Character
+	if character then
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoidRootPart then
+			-- Ensure the HumanoidRootPart is slightly above the ground
+			humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 2, 0)
+
+			-- Apply upward force to avoid being stuck
+			local bodyVelocity = Instance.new("BodyVelocity")
+			bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000) -- Allow large forces for upward push
+			bodyVelocity.Velocity = Vector3.new(0, 10, 0)  -- Apply a stronger upward velocity
+			bodyVelocity.Parent = humanoidRootPart
+
+			-- Wait for a brief moment and then clean up the BodyVelocity
+			wait(0.1)
+			bodyVelocity:Destroy()
+
+			-- Disable collision again after stop
+			enableCollision(character)
+
+			-- Ensure the humanoid is no longer sitting
+			if humanoid then
+				humanoid.Sit = false
+			end
+		end
 	end
 end
 
@@ -728,8 +771,6 @@ followButton.MouseButton1Click:Connect(function()
 end)
 
 stopButton.MouseButton1Click:Connect(stopFollowing)
-
-
 
 
 
@@ -922,6 +963,133 @@ local Button = Tab:CreateButton({
    getgenv().host = game:GetService'Players'.LocalPlayer
 
 host.CameraMaxZoomDistance = math.huge
+   end,
+})
+
+
+local Button = Tab:CreateButton({
+   Name = "FreeCam",
+   Callback = function()
+   -- Freecam Script (Final Version with Movement Lock and Respawn Support)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Configuration
+local camSpeed = 1        -- Movement speed
+local sensitivity = 0.2   -- Mouse look sensitivity
+local freeCamEnabled = false
+
+-- State
+local rotation = Vector2.new()
+local movement = Vector3.zero
+local camPos = Vector3.zero
+local keysDown = {}
+
+-- Movement keys
+local moveKeys = {
+	[Enum.KeyCode.W] = Vector3.new(0, 0, -1),
+	[Enum.KeyCode.S] = Vector3.new(0, 0, 1),
+	[Enum.KeyCode.A] = Vector3.new(-1, 0, 0),
+	[Enum.KeyCode.D] = Vector3.new(1, 0, 0),
+	[Enum.KeyCode.E] = Vector3.new(0, 1, 0),
+	[Enum.KeyCode.Q] = Vector3.new(0, -1, 0)
+}
+
+-- Show instructions
+StarterGui:SetCore("SendNotification", {
+	Title = "Freecam Ready",
+	Text = "Press P to activate Freecam",
+	Duration = 6
+})
+
+-- Lock or unlock character movement
+local function setMovementLock(lock)
+	local char = player.Character
+	if char then
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.AutoRotate = not lock
+			humanoid.WalkSpeed = lock and 0 or 16
+			humanoid.JumpPower = lock and 0 or 50
+		end
+	end
+end
+
+-- Toggle freecam
+local function toggleFreeCam()
+	freeCamEnabled = not freeCamEnabled
+	UserInputService.MouseBehavior = freeCamEnabled and Enum.MouseBehavior.LockCenter or Enum.MouseBehavior.Default
+	UserInputService.MouseIconEnabled = not freeCamEnabled
+
+	if freeCamEnabled then
+		camera.CameraType = Enum.CameraType.Scriptable
+		camPos = camera.CFrame.Position
+		setMovementLock(true)
+	else
+		camera.CameraType = Enum.CameraType.Custom
+		setMovementLock(false)
+	end
+end
+
+-- Key input
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.P then
+			toggleFreeCam()
+		elseif moveKeys[input.KeyCode] then
+			keysDown[input.KeyCode] = true
+		end
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Keyboard and moveKeys[input.KeyCode] then
+		keysDown[input.KeyCode] = false
+	end
+end)
+
+-- Freecam loop
+RunService.RenderStepped:Connect(function(dt)
+	if not freeCamEnabled then return end
+
+	local delta = UserInputService:GetMouseDelta()
+	rotation = rotation + Vector2.new(-delta.Y, -delta.X) * sensitivity
+	rotation = Vector2.new(math.clamp(rotation.X, -89, 89), rotation.Y)
+
+	local yaw = CFrame.Angles(0, math.rad(rotation.Y), 0)
+	local pitch = CFrame.Angles(math.rad(rotation.X), 0, 0)
+	local rotCF = yaw * pitch
+
+	local moveVec = Vector3.zero
+	for key, vec in pairs(moveKeys) do
+		if keysDown[key] then
+			moveVec += vec
+		end
+	end
+	if moveVec.Magnitude > 0 then
+		moveVec = moveVec.Unit * camSpeed
+	end
+
+	camPos += rotCF:VectorToWorldSpace(moveVec) * dt * 60
+	camera.CFrame = CFrame.new(camPos) * rotCF
+end)
+
+-- Respawn support
+player.CharacterAdded:Connect(function()
+	if freeCamEnabled then
+		task.wait(1)
+		camera.CameraType = Enum.CameraType.Scriptable
+		setMovementLock(true)
+	end
+end)
+
    end,
 })
 
@@ -1160,3 +1328,4 @@ player.CharacterAdded:Connect(Animation)
 
    end,
 })
+
