@@ -237,8 +237,12 @@ local function gotoTarget(king, target)
     local kingRoot = getRoot(king.Character)
     local targetRoot = getRoot(target.Character)
     if kingRoot and targetRoot then
-        -- Correct the King’s position with a small offset
-        kingRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
+        -- Attempt to move the King to the target’s position
+        local targetPosition = targetRoot.Position
+        local kingRootPosition = kingRoot.Position
+        -- Create a new CFrame with an offset
+        local newCFrame = CFrame.new(targetPosition + Vector3.new(2, 0, 0))
+        kingRoot.CFrame = newCFrame
     end
 end
 
@@ -255,16 +259,37 @@ local function handleKingCommand(plr)
             local targets = {}
 
             -- Collect targets based on the command
-            if arg == "all" and cmd ~= "$goto" then
+            if cmd == "$bring" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    -- Directly target the specific player
+                    table.insert(targets, target)
+                end
+            elseif cmd == "$fling" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
+            elseif cmd == "$freeze" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
+            elseif cmd == "$unfreeze" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
+            elseif cmd == "$goto" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
+            elseif arg == "all" then
                 for _, target in ipairs(Players:GetPlayers()) do
                     if isUsingScript(target) and target ~= plr then
                         table.insert(targets, target)
                     end
-                end
-            else
-                local target = findPlayerByName(arg)
-                if target and isUsingScript(target) and target ~= plr then
-                    table.insert(targets, target)
                 end
             end
 
@@ -292,6 +317,7 @@ for _, plr in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(handleKingCommand)
+
 
 
 local Button = Tab:CreateButton({
