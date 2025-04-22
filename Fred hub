@@ -189,11 +189,7 @@ local function findPlayerByName(partial)
             return plr
         end
     end
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr.Name:lower():find(partial) or plr.DisplayName:lower():find(partial) then
-            return plr
-        end
-    end
+    return nil -- Return nil if no player found
 end
 
 -- Command implementations
@@ -241,7 +237,7 @@ local function gotoTarget(king, target)
     local kingRoot = getRoot(king.Character)
     local targetRoot = getRoot(target.Character)
     if kingRoot and targetRoot then
-        -- Ensure the King is moving properly by setting their CFrame
+        -- Correct the King’s position with a small offset
         kingRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
     end
 end
@@ -296,6 +292,7 @@ for _, plr in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(handleKingCommand)
+
 
 local Button = Tab:CreateButton({
    Name = "Tp To FredHub King",
