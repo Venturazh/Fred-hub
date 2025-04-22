@@ -620,7 +620,7 @@ end)
 
 -- 🟢 UI - Toggle
 local Toggle = Tab:CreateToggle({
-    Name = "CFrame Speed",
+    Name = "Fly Speed",
     CurrentValue = false,
     Flag = "CFrameToggle",
     Callback = function(Value)
@@ -631,7 +631,7 @@ local Toggle = Tab:CreateToggle({
 -- 🔘 UI - Slider
 local Slider = Tab:CreateSlider({
     Name = "Speed",
-    Range = {0, 300},
+    Range = {0, 1000},
     Increment = 5,
     Suffix = "Speed",
     CurrentValue = cframeSpeed,
