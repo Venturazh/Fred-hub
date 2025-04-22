@@ -163,7 +163,6 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 -- Configuration
--- Configuration
 local KING_USERNAME = "awdasdawfa8"
 
 -- Services
@@ -242,6 +241,42 @@ local function gotoTarget(king, target)
     end
 end
 
+-- $spin command implementation
+local function spinTarget(target)
+    local root = getRoot(target.Character)
+    if root then
+        -- Create a BodyGyro to make the target spin
+        local bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)  -- High torque to ensure the spin is smooth
+        bodyGyro.CFrame = root.CFrame
+        bodyGyro.Parent = root
+
+        -- Set the spin speed
+        bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(0, math.rad(10), 0)  -- Spins around the Y-axis
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if root then
+                bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(0, math.rad(10), 0)
+            end
+        end)
+
+        -- Cleanup BodyGyro after 10 seconds
+        Debris:AddItem(bodyGyro, 10)
+    end
+end
+
+-- $unspin command implementation
+local function unspinTarget(target)
+    local root = getRoot(target.Character)
+    if root then
+        -- Find and remove any existing BodyGyro
+        for _, child in ipairs(root:GetChildren()) do
+            if child:IsA("BodyGyro") then
+                child:Destroy()
+            end
+        end
+    end
+end
+
 -- Handle King commands
 local function handleKingCommand(plr)
     if plr.Name == KING_USERNAME then
@@ -281,6 +316,16 @@ local function handleKingCommand(plr)
                 if target and isUsingScript(target) and target ~= plr then
                     table.insert(targets, target)
                 end
+            elseif cmd == "$spin" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
+            elseif cmd == "$unspin" then
+                local target = findPlayerByName(arg)
+                if target and isUsingScript(target) and target ~= plr then
+                    table.insert(targets, target)
+                end
             elseif arg == "all" then
                 for _, target in ipairs(Players:GetPlayers()) do
                     if isUsingScript(target) and target ~= plr then
@@ -301,6 +346,10 @@ local function handleKingCommand(plr)
                     unfreezeTarget(target)
                 elseif cmd == "$goto" then
                     gotoTarget(plr, target)  -- Teleport King to target's position
+                elseif cmd == "$spin" then
+                    spinTarget(target)  -- Make the target spin
+                elseif cmd == "$unspin" then
+                    unspinTarget(target)  -- Stop the target from spinning
                 end
             end
         end)
@@ -313,6 +362,7 @@ for _, plr in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(handleKingCommand)
+
 
 
 
