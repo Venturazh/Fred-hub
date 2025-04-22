@@ -106,7 +106,7 @@ local function make_title(player, text, color, transparency)
         billboardGui.Size = UDim2.new(10, 0, 1.5, 0)
         billboardGui.MaxDistance = math.huge
         billboardGui.LightInfluence = 0
-        billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+        billboardGui.StudsOffset = Vector3.new(0, 8, 0)
         billboardGui.AlwaysOnTop = true
         billboardGui.Parent = head
 
