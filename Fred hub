@@ -88,13 +88,13 @@ end)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Your username
+-- Your usernames
 local kingUsername = "awdasdawfa8"
-local sigmaUsername = LocalPlayer.Name  -- Change this to your username if needed
+local queenUsername = "Rusal42" -- <<== CHANGE THIS to your queen's username
+local sigmaUsername = LocalPlayer.Name       -- Local player is treated as Sigma (Daughter)
 
 -- Title function (Client-only visual title)
 local function make_title(player, text, color, transparency)
-    -- Function to apply the title to the character
     local function applyToCharacter(character)
         task.wait(0.5)
         local head = character:FindFirstChild("Head")
@@ -134,32 +134,31 @@ local function make_title(player, text, color, transparency)
         textLabel.Parent = background
     end
 
-    -- Apply to the player's character when it's ready
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         applyToCharacter(player.Character)
     end
     player.CharacterAdded:Connect(applyToCharacter)
 end
 
--- Assign title based on conditions
+-- Assign title based on roles
 local function assignTitle(player)
     if player.Name == kingUsername then
-        -- King Title
         make_title(player, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
+    elseif player.Name == queenUsername then
+        make_title(player, "👑 FredHub | QUEEN 👑", Color3.fromRGB(255, 105, 180), 0)
     elseif player.Name == sigmaUsername then
-        -- Sigma Title
-        make_title(player, "👧 FredHub | Sigma 👧", Color3.fromRGB(89, 34, 89), 0.3)
+        make_title(player, "🗿 FredHub | Sigma 🗿", Color3.fromRGB(89, 34, 89), 0.3)
     end
 end
 
--- Apply title to all players visible by script users
+-- Apply to current players
 for _, player in ipairs(Players:GetPlayers()) do
     assignTitle(player)
 end
 
--- Update for players who join the game
+-- Apply to players who join later
 Players.PlayerAdded:Connect(function(player)
-    task.wait(1) -- Ensure the character has loaded before assigning title
+    task.wait(1)
     assignTitle(player)
 end)
 
@@ -168,23 +167,21 @@ local KING_USERNAME = "awdasdawfa8"
 
 -- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
 local LocalPlayer = Players.LocalPlayer
 
--- Mark the player as a script user
+-- Mark local player as using the script
 LocalPlayer:SetAttribute("UsingZackScript", true)
 
--- Helper: Get HumanoidRootPart
+-- Utility functions
 local function getRoot(char)
     return char and char:FindFirstChild("HumanoidRootPart")
 end
 
--- Helper: Check if player is using the script
 local function isUsingScript(plr)
     return plr:GetAttribute("UsingZackScript") == true
 end
 
--- Helper: Find player by display name, username, or partial
 local function findPlayerByName(partial)
     partial = partial:lower()
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -199,7 +196,7 @@ local function findPlayerByName(partial)
     end
 end
 
--- Command Actions
+-- Command implementations
 local function bringTargetToKing(target, king)
     local kingRoot = getRoot(king.Character)
     local targetRoot = getRoot(target.Character)
@@ -216,20 +213,34 @@ local function flingTarget(target)
         bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
         bv.P = 1e5
         bv.Parent = root
-        game.Debris:AddItem(bv, 0.5)
+        Debris:AddItem(bv, 0.5)
     end
 end
 
-local function gotoTarget(me, target)
-    local myRoot = getRoot(me.Character)
+local function freezeTarget(target)
+    local root = getRoot(target.Character)
+    if root then
+        root.Anchored = true
+    end
+end
+
+local function unfreezeTarget(target)
+    local root = getRoot(target.Character)
+    if root then
+        root.Anchored = false
+    end
+end
+
+local function gotoTarget(king, target)
+    local kingRoot = getRoot(king.Character)
     local targetRoot = getRoot(target.Character)
-    if myRoot and targetRoot then
-        myRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
+    if kingRoot and targetRoot then
+        kingRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
     end
 end
 
--- Hook into the King’s commands
-local function onPlayerAdded(plr)
+-- Handle King commands
+local function handleKingCommand(plr)
     if plr.Name == KING_USERNAME then
         plr.Chatted:Connect(function(msg)
             local cmd, arg = msg:match("^(%S+)%s*(.*)$")
@@ -237,54 +248,44 @@ local function onPlayerAdded(plr)
             cmd = cmd:lower()
             arg = arg:lower()
 
-            if cmd == "$bring" then
-                if arg == "all" then
-                    for _, target in ipairs(Players:GetPlayers()) do
-                        if isUsingScript(target) and target ~= plr and target.Name ~= KING_USERNAME then
-                            bringTargetToKing(target, plr)
-                        end
-                    end
-                else
-                    local target = findPlayerByName(arg)
-                    if target and isUsingScript(target) and target.Name ~= KING_USERNAME then
-                        bringTargetToKing(target, plr)
+            local targets = {}
+
+            if arg == "all" and cmd ~= "$goto" then
+                for _, target in ipairs(Players:GetPlayers()) do
+                    if isUsingScript(target) and target ~= plr then
+                        table.insert(targets, target)
                     end
                 end
-
-            elseif cmd == "$fling" then
-                if arg == "all" then
-                    for _, target in ipairs(Players:GetPlayers()) do
-                        if isUsingScript(target) and target ~= plr and target.Name ~= KING_USERNAME then
-                            flingTarget(target)
-                        end
-                    end
-                else
-                    local target = findPlayerByName(arg)
-                    if target and isUsingScript(target) and target.Name ~= KING_USERNAME then
-                        flingTarget(target)
-                    end
-                end
-
-            elseif cmd == "$goto" then
+            else
                 local target = findPlayerByName(arg)
                 if target and isUsingScript(target) and target ~= plr then
-                    local targetRoot = getRoot(target.Character)
-                    local kingRoot = getRoot(plr.Character)
-                    if targetRoot and kingRoot then
-                        kingRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
-                    end
+                    table.insert(targets, target)
+                end
+            end
+
+            for _, target in ipairs(targets) do
+                if cmd == "$bring" then
+                    bringTargetToKing(target, plr)
+                elseif cmd == "$fling" then
+                    flingTarget(target)
+                elseif cmd == "$freeze" then
+                    freezeTarget(target)
+                elseif cmd == "$unfreeze" then
+                    unfreezeTarget(target)
+                elseif cmd == "$goto" then
+                    gotoTarget(plr, target)
                 end
             end
         end)
     end
 end
 
--- Connect all current players + future players
+-- Setup for existing and future players
 for _, plr in ipairs(Players:GetPlayers()) do
-    onPlayerAdded(plr)
+    handleKingCommand(plr)
 end
-Players.PlayerAdded:Connect(onPlayerAdded)
 
+Players.PlayerAdded:Connect(handleKingCommand)
 
 
 local Button = Tab:CreateButton({
