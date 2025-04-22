@@ -1046,40 +1046,38 @@ Tab:CreateToggle({
 	end
 })
 
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local localPlayer = Players.LocalPlayer
-local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local hrp = character:WaitForChild("HumanoidRootPart")
-
+local running = false
+local heartConn
+local conn
 local fKey = Enum.KeyCode.Z
 local speed = 1
 local distSlider = 3
 
-local running = false
-local heartConn
-local conn
-
--- Stop movement
+-- Function to stop the script when needed
 local function stop()
     if conn then
         conn:Disconnect()
         conn = nil
     end
-    if humanoid then
-        humanoid.PlatformStand = false
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        localPlayer.Character.Humanoid.PlatformStand = false
     end
     running = false
 end
 
--- Animation logic
+-- Function to start the animation when the player presses the keybind
 local function startFaceBang()
     if running then return end
     running = true
+
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local hrp = character:WaitForChild("HumanoidRootPart")
 
     humanoid.PlatformStand = true
 
@@ -1155,7 +1153,7 @@ local function startFaceBang()
     end)
 end
 
--- Key press handler
+-- Function to handle key press and toggle the animation on and off
 heartConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == fKey then
         if running then
@@ -1222,6 +1220,15 @@ Tab:CreateSlider({
         distSlider = val
     end
 })
+
+-- Detect respawn and re-enable functionality
+localPlayer.CharacterAdded:Connect(function()
+    -- Re-enable script logic when the character respawns
+    if not running then
+        running = true
+        print("Character respawned, re-enabling script.")
+    end
+end)
 
 
 local Tab = Window:CreateTab("Character", nil) -- Title, Image
