@@ -189,7 +189,11 @@ local function findPlayerByName(partial)
             return plr
         end
     end
-    return nil -- Return nil if no player found
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Name:lower():find(partial) or plr.DisplayName:lower():find(partial) then
+            return plr
+        end
+    end
 end
 
 -- Command implementations
@@ -216,12 +220,6 @@ end
 local function freezeTarget(target)
     local root = getRoot(target.Character)
     if root then
-        -- Use BodyGyro instead of Anchoring to prevent rotation and movement
-        local bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
-        bodyGyro.CFrame = root.CFrame
-        bodyGyro.Parent = root
-        Debris:AddItem(bodyGyro, 0.1)  -- Remove after a short time to avoid clamping
         root.Anchored = true
     end
 end
@@ -233,12 +231,13 @@ local function unfreezeTarget(target)
     end
 end
 
+-- Updated gotoTarget using MoveTo
 local function gotoTarget(king, target)
-    local kingRoot = getRoot(king.Character)
-    local targetRoot = getRoot(target.Character)
-    if kingRoot and targetRoot then
-        -- Using the same method as $bring, adjust the King’s position to target’s position
-        kingRoot.CFrame = targetRoot.CFrame + Vector3.new(2, 0, 0)
+    local targetChar = target.Character
+    if targetChar and king.Character then
+        -- Move King to the target's HumanoidRootPart position
+        local targetPosition = targetChar.HumanoidRootPart.Position
+        king.Character:MoveTo(targetPosition)
     end
 end
 
@@ -313,7 +312,6 @@ for _, plr in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(handleKingCommand)
-
 
 
 local Button = Tab:CreateButton({
