@@ -161,7 +161,6 @@ Players.PlayerAdded:Connect(function(player)
     task.wait(1)
     assignTitle(player)
 end)
-
 -- Configuration
 local KING_USERNAME = "awdasdawfa8"
 
@@ -231,7 +230,7 @@ local function unfreezeTarget(target)
     end
 end
 
--- Updated $goto implementation with the same method as the GUI teleportation
+-- $goto implementation
 local function gotoTarget(king, target)
     local targetChar = target.Character
     if targetChar and king.Character then
@@ -241,37 +240,59 @@ local function gotoTarget(king, target)
     end
 end
 
--- $spin command implementation
+-- Spin command using BodyThrust
 local function spinTarget(target)
-    local root = getRoot(target.Character)
-    if root then
-        -- Create a BodyGyro to make the target spin
-        local bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)  -- High torque to ensure the spin is smooth
-        bodyGyro.CFrame = root.CFrame
-        bodyGyro.Parent = root
-
-        -- Set the spin speed
-        bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(0, math.rad(10), 0)  -- Spins around the Y-axis
-        game:GetService("RunService").Heartbeat:Connect(function()
-            if root then
-                bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(0, math.rad(10), 0)
-            end
+    local power = 600 -- Change this to make it more or less powerful
+    local character = target.Character
+    if character then
+        -- Disable collision for a smooth experience
+        game:GetService('RunService').Stepped:connect(function()
+            character.Head.CanCollide = false
+            character.UpperTorso.CanCollide = false
+            character.LowerTorso.CanCollide = false
+            character.HumanoidRootPart.CanCollide = false
         end)
+        wait(0.1)
+        
+        -- Apply BodyThrust to make the player spin
+        local bambam = Instance.new("BodyThrust")
+        bambam.Parent = character.HumanoidRootPart
+        bambam.Force = Vector3.new(power, 0, power)
+        bambam.Location = character.HumanoidRootPart.Position
+        
+        -- Noclip feature for smooth movement
+        local noclip = true
+        while noclip do
+            for _, v in pairs(character:children()) do
+                pcall(function()
+                    if v.ClassName == "Part" then
+                        v.CanCollide = false
+                    end
+                end)
+            end
+            game:service("RunService").Stepped:wait()
+        end
 
-        -- Cleanup BodyGyro after 10 seconds
-        Debris:AddItem(bodyGyro, 10)
+        -- Cleanup after 10 seconds
+        Debris:AddItem(bambam, 10)
     end
 end
 
--- $unspin command implementation
+-- Unspin command to stop the spinning by removing BodyThrust
 local function unspinTarget(target)
-    local root = getRoot(target.Character)
-    if root then
-        -- Find and remove any existing BodyGyro
-        for _, child in ipairs(root:GetChildren()) do
-            if child:IsA("BodyGyro") then
+    local character = target.Character
+    if character then
+        -- Find and remove the BodyThrust object (if it exists)
+        for _, child in ipairs(character.HumanoidRootPart:GetChildren()) do
+            if child:IsA("BodyThrust") then
                 child:Destroy()
+            end
+        end
+
+        -- Restore collision for smooth movement after unspinning
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
             end
         end
     end
@@ -293,7 +314,6 @@ local function handleKingCommand(plr)
             if cmd == "$bring" then
                 local target = findPlayerByName(arg)
                 if target and isUsingScript(target) and target ~= plr then
-                    -- Directly target the specific player
                     table.insert(targets, target)
                 end
             elseif cmd == "$fling" then
@@ -345,7 +365,7 @@ local function handleKingCommand(plr)
                 elseif cmd == "$unfreeze" then
                     unfreezeTarget(target)
                 elseif cmd == "$goto" then
-                    gotoTarget(plr, target)  -- Teleport King to target's position
+                    gotoTarget(plr, target)
                 elseif cmd == "$spin" then
                     spinTarget(target)  -- Make the target spin
                 elseif cmd == "$unspin" then
