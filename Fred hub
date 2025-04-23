@@ -90,8 +90,9 @@ local LocalPlayer = Players.LocalPlayer
 
 -- Your usernames
 local kingUsername = "awdasdawfa8"
-local queenUsername = "Rusal42" -- <<== CHANGE THIS to your queen's username
-local sigmaUsername = LocalPlayer.Name       -- Local player is treated as Sigma (Daughter)
+local queenUsername = "Rusal42"
+local coOwnerUsername = "Tips_alt9" -- <<== CHANGE THIS to your co-owner's username
+local sigmaUsername = LocalPlayer.Name -- Local player is treated as Sigma (Daughter)
 
 -- Title function (Client-only visual title)
 local function make_title(player, text, color, transparency)
@@ -146,10 +147,13 @@ local function assignTitle(player)
         make_title(player, "👑 FredHub | KING 👑", Color3.fromRGB(196, 40, 28), 0)
     elseif player.Name == queenUsername then
         make_title(player, "👑 FredHub | QUEEN 👑", Color3.fromRGB(255, 105, 180), 0)
+    elseif player.Name == coOwnerUsername then
+        make_title(player, "⭐ FredHub | Doxbin", Color3.fromRGB(255, 215, 0), 0)
     elseif player.Name == sigmaUsername then
         make_title(player, "🗿 FredHub | Sigma 🗿", Color3.fromRGB(89, 34, 89), 0.3)
     end
 end
+
 
 -- Apply to current players
 for _, player in ipairs(Players:GetPlayers()) do
