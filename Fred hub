@@ -90,7 +90,6 @@ local LocalPlayer = Players.LocalPlayer
 
 -- Your usernames
 local kingUsername = "awdasdawfa8"
-local kingUsername = "Venturazh"
 local queenUsername = "Rusal42" -- <<== CHANGE THIS to your queen's username
 local sigmaUsername = LocalPlayer.Name       -- Local player is treated as Sigma (Daughter)
 
