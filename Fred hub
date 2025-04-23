@@ -162,12 +162,8 @@ Players.PlayerAdded:Connect(function(player)
     task.wait(1)
     assignTitle(player)
 end)
--- List of king usernames
-local KING_USERNAMES = {
-    "awdasdawfa8",  -- First king
-    "venturazh",  -- Second king (replace with actual username)
-    -- Add more king usernames here as needed
-}
+local KING_USERNAME = "awdasdawfa8"
+
 
 -- Services
 local Players = game:GetService("Players")
@@ -317,75 +313,73 @@ end
 
 -- Command Handler
 local function handleKingCommand(plr)
-    for _, kingUsername in ipairs(KING_USERNAMES) do
-        if plr.Name == kingUsername then
-            plr.Chatted:Connect(function(msg)
-                local cmd, arg = msg:match("^(%S+)%s*(.*)$")
-                if not cmd then return end
-                cmd = cmd:lower()
-                arg = arg:lower()
+    if plr.Name == KING_USERNAME then
+        plr.Chatted:Connect(function(msg)
+            local cmd, arg = msg:match("^(%S+)%s*(.*)$")
+            if not cmd then return end
+            cmd = cmd:lower()
+            arg = arg:lower()
 
-                local targets = {}
+            local targets = {}
 
-                local function getValidTarget()
-                    local t = findPlayerByName(arg)
-                    if t and isUsingScript(t) and t ~= plr then
-                        return t
+            local function getValidTarget()
+                local t = findPlayerByName(arg)
+                if t and isUsingScript(t) and t ~= plr then
+                    return t
+                end
+            end
+
+            if cmd == "$bring" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$fling" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$freeze" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$unfreeze" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$goto" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$spin" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$unspin" then
+                local t = getValidTarget()
+                if t then table.insert(targets, t) end
+            elseif cmd == "$summon" then
+                summonAllToKing(plr)
+            elseif cmd == "$unsummon" then
+                unsummonAll()
+            elseif arg == "all" then
+                for _, target in ipairs(Players:GetPlayers()) do
+                    if isUsingScript(target) and target ~= plr then
+                        table.insert(targets, target)
                     end
                 end
+            end
 
+            for _, target in ipairs(targets) do
                 if cmd == "$bring" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    bringTargetToKing(target, plr)
                 elseif cmd == "$fling" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    flingTarget(target)
                 elseif cmd == "$freeze" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    freezeTarget(target)
                 elseif cmd == "$unfreeze" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    unfreezeTarget(target)
                 elseif cmd == "$goto" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    gotoTarget(plr, target)
                 elseif cmd == "$spin" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
+                    spinTarget(target)
                 elseif cmd == "$unspin" then
-                    local t = getValidTarget()
-                    if t then table.insert(targets, t) end
-                elseif cmd == "$summon" then
-                    summonAllToKing(plr)
-                elseif cmd == "$unsummon" then
-                    unsummonAll()
-                elseif arg == "all" then
-                    for _, target in ipairs(Players:GetPlayers()) do
-                        if isUsingScript(target) and target ~= plr then
-                            table.insert(targets, target)
-                        end
-                    end
+                    unspinTarget(target)
                 end
-
-                for _, target in ipairs(targets) do
-                    if cmd == "$bring" then
-                        bringTargetToKing(target, plr)
-                    elseif cmd == "$fling" then
-                        flingTarget(target)
-                    elseif cmd == "$freeze" then
-                        freezeTarget(target)
-                    elseif cmd == "$unfreeze" then
-                        unfreezeTarget(target)
-                    elseif cmd == "$goto" then
-                        gotoTarget(plr, target)
-                    elseif cmd == "$spin" then
-                        spinTarget(target)
-                    elseif cmd == "$unspin" then
-                        unspinTarget(target)
-                    end
-                end
-            end)
-        end
+            end
+        end)
     end
 end
 
