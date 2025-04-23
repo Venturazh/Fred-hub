@@ -91,7 +91,7 @@ local LocalPlayer = Players.LocalPlayer
 -- Your usernames
 local kingUsername = "awdasdawfa8"
 local queenUsername = "Rusal42"
-local coOwnerUsername = "Tips_alt9" -- <<== CHANGE THIS to your co-owner's username
+local coOwnerUsername = "tips_alt9" -- <<== CHANGE THIS to your co-owner's username
 local sigmaUsername = LocalPlayer.Name -- Local player is treated as Sigma (Daughter)
 
 -- Title function (Client-only visual title)
