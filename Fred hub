@@ -291,18 +291,23 @@ end
 local summonedPlayers = {}
 
 local function summonAllToKing(king)
+    local kingRoot = getRoot(king.Character)
+    if not kingRoot then return end
+
+    local offset = 0
     for _, plr in ipairs(Players:GetPlayers()) do
         if isUsingScript(plr) and plr ~= king then
             local root = getRoot(plr.Character)
-            local kingRoot = getRoot(king.Character)
-            if root and kingRoot then
-                root.CFrame = kingRoot.CFrame * CFrame.new(math.random(-3,3), 0, -5)
+            if root then
+                root.CFrame = kingRoot.CFrame * CFrame.new(offset, 0, -5)
                 root.Anchored = true
                 summonedPlayers[plr] = true
+                offset = offset + 4 -- spread them out
             end
         end
     end
 end
+
 
 local function unsummonAll()
     for plr in pairs(summonedPlayers) do
